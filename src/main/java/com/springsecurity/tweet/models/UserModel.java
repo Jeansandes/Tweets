@@ -30,6 +30,10 @@ public class UserModel  {
     )
     private Set<Role> roles;
 
+    public UserModel(UUID id, String username, String password, Role roleadmin) {
+    }
+    public UserModel(){}
+
     public UUID getUserId() {
         return userId;
     }
