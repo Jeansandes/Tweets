@@ -22,6 +22,16 @@ public class Tweet {
     @CreationTimestamp
     private Instant creationTimestamp;
 
+    public Tweet() {
+    }
+
+    public Tweet(Long tweetId, UserModel user,String content,Instant creationTimestamp) {
+        this.tweetId = tweetId;
+        this.user = user;
+        this.content = content;
+        this.creationTimestamp = creationTimestamp;
+    }
+
     public Long getTweetId() {
         return tweetId;
     }

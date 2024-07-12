@@ -21,13 +21,11 @@ public class UserService {
     private RoleRepository roleRepository;
     private BCryptPasswordEncoder passwordEncoder;
 
-    private ModelMapper mapper;
 
-    public UserService( UserRepository userRepository,RoleRepository roleRepository,ModelMapper mapper
+    public UserService( UserRepository userRepository,RoleRepository roleRepository
                         ,BCryptPasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
-        this.mapper = mapper;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -43,7 +41,6 @@ public class UserService {
         user.setUsername(dto.username());
         user.setRoles(Set.of(basicRole));
         user.setPassword(passwordEncoder.encode(dto.password()));
-
         userRepository.save(user);
     }
 

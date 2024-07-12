@@ -10,11 +10,11 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "tb_users")
-public class UserModel  {
+public class UserModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column (name = "user_id")
+    @Column(name = "user_id")
     private UUID userId;
 
     @Column(unique = true)
@@ -24,15 +24,19 @@ public class UserModel  {
 
     @ManyToMany
     @JoinTable(
-        name = "tb_users_roles",
+            name = "tb_users_roles",
             joinColumns = @JoinColumn(name = "userId"),
             inverseJoinColumns = @JoinColumn(name = "roleId")
     )
     private Set<Role> roles;
 
-    public UserModel(UUID id, String username, String password, Role roleadmin) {
+    public UserModel(String username, String password) {
+        this.username = username;
+        this.password = password;
     }
-    public UserModel(){}
+
+    public UserModel() {
+    }
 
     public UUID getUserId() {
         return userId;
@@ -66,8 +70,8 @@ public class UserModel  {
         this.roles = roles;
     }
 
-    public boolean isLoginCorrect(LoginRequest loginRequest, PasswordEncoder passwordEncoder){
-       return  passwordEncoder.matches(loginRequest.password(),this.password);
+    public boolean isLoginCorrect(LoginRequest loginRequest, PasswordEncoder passwordEncoder) {
+        return passwordEncoder.matches(loginRequest.password(), this.password);
     }
 }
 
