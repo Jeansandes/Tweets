@@ -20,13 +20,14 @@ public class UserService {
     private UserRepository userRepository;
     private RoleRepository roleRepository;
     private BCryptPasswordEncoder passwordEncoder;
-
+    private EmailServices emailServices;
 
     public UserService( UserRepository userRepository,RoleRepository roleRepository
-                        ,BCryptPasswordEncoder passwordEncoder) {
+                        ,BCryptPasswordEncoder passwordEncoder,EmailServices emailServices) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailServices = emailServices;
     }
 
     @Transactional
@@ -42,6 +43,10 @@ public class UserService {
         user.setRoles(Set.of(basicRole));
         user.setPassword(passwordEncoder.encode(dto.password()));
         userRepository.save(user);
+        emailServices.sendTxtMail(user.getEmail()
+                , "Logado com sucesso no twitter!"
+                ,"parabéns "+user.getUsername()+" voce foi cadastrado com sucesso!");
+
     }
 
     public List<UserModel> findAll() {

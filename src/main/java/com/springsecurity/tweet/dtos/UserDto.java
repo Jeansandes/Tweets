@@ -1,4 +1,4 @@
 package com.springsecurity.tweet.dtos;
 
-public record UserDto(String username, String password) {
+public record UserDto(String username,String email, String password) {
 }
