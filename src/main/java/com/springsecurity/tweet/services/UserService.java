@@ -42,10 +42,10 @@ public class UserService {
         user.setUsername(dto.username());
         user.setRoles(Set.of(basicRole));
         user.setPassword(passwordEncoder.encode(dto.password()));
-        userRepository.save(user);
-        emailServices.sendTxtMail(user.getEmail()
+        emailServices.sendTxtMail(dto.email()
                 , "Logado com sucesso no twitter!"
                 ,"parabéns "+user.getUsername()+" voce foi cadastrado com sucesso!");
+        userRepository.save(user);
 
     }
 

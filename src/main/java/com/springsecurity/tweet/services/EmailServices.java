@@ -25,6 +25,9 @@ public class EmailServices {
             mailSender.send(mailMessage);
         }catch (Exception e){
             System.out.println("erro "+e.getMessage());
+            System.out.println("por causa +"+e.getCause());
+            System.out.println("por causa +"+e.getStackTrace());
+            System.out.println("por causa +"+e.getLocalizedMessage());
         }
     }
 }
