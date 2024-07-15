@@ -1,6 +1,7 @@
 package com.springsecurity.tweet.services;
 
 import com.springsecurity.tweet.Exceptions.UserAlreadyExistsException;
+import com.springsecurity.tweet.Exceptions.UserNotFoundException;
 import com.springsecurity.tweet.dtos.UserDto;
 import com.springsecurity.tweet.models.Role;
 import com.springsecurity.tweet.models.UserModel;
@@ -40,6 +41,7 @@ public class UserService {
         }
         var user = new UserModel();
         user.setUsername(dto.username());
+        user.setEmail(dto.email());
         user.setRoles(Set.of(basicRole));
         user.setPassword(passwordEncoder.encode(dto.password()));
         emailServices.sendTxtMail(dto.email()
@@ -52,6 +54,12 @@ public class UserService {
     public List<UserModel> findAll() {
         var users = userRepository.findAll();
         return users;
+    }
+
+    @Transactional
+    public void delete(String username) {
+        var user = userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException("user: "+ username+" not found"));
+        userRepository.deleteByUsername(username);
     }
 }
 

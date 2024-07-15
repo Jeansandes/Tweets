@@ -27,6 +27,7 @@ class TokenServiceTest {
     private static final String USERNAMEBASIC = "jean";
     private static final String PASSWORDENCODER = "123";
     private static final String PASSWORDENCODER2 = "1223";
+    private static final String EMAIL = "sandesjean@gmail.com";
     private static final UUID ID = UUID.randomUUID();
     @InjectMocks
     TokenService tokenService;
@@ -51,7 +52,7 @@ class TokenServiceTest {
 
     private void startContent() {
         basicRole.setName(Role.Values.BASIC.name());
-        userBasic = new UserModel(USERNAMEBASIC, PASSWORDENCODER2);
+        userBasic = new UserModel(USERNAMEBASIC, EMAIL,PASSWORDENCODER2);
         userBasic.setUserId(ID);
         userBasic.setRoles(Set.of(basicRole));
         loginRequest = new LoginRequest(USERNAMEBASIC,PASSWORDENCODER);

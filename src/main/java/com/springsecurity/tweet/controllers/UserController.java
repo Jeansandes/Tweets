@@ -11,6 +11,7 @@ import java.util.List;
 
 @RestController
 @ResponseBody
+@RequestMapping("/users")
 public class UserController {
 
     private UserService userService;
@@ -19,17 +20,24 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/users")
+    @PostMapping
     public ResponseEntity<Void> createUser(@RequestBody UserDto dto) {
         userService.save(dto);
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/users")
+    @GetMapping
     @PreAuthorize("hasAuthority('SCOPE_admin')")
     public ResponseEntity<List<UserModel>> ListUsers(){
 
         return ResponseEntity.ok(userService.findAll());
+    }
+
+    @DeleteMapping("/username")
+    //@PreAuthorize("hasAuthority('SCOPE_admin')")
+    public ResponseEntity<Void> deleteUser(@RequestBody String username ){
+        userService.delete(username);
+        return ResponseEntity.ok().build();
     }
 }
 

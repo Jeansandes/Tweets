@@ -34,6 +34,7 @@ class TweetServiceTest {
     private static final UUID ID = UUID.randomUUID();
     private static final Long IDTWEET = 1L;
     private static final String USERNAMEBASIC = "jean";
+    private static final String EMAIL = "sandesjean@gmail.com";
     private static final String CONTENT = "testando uma nova menssagem no tweet!";
     private static final String PASSWORD = "123";
     private static final Role ROLEADMIN = new Role();
@@ -121,10 +122,10 @@ class TweetServiceTest {
 
     private void startContent() {
         basicRole.setName(Role.Values.BASIC.name());
-        userBasic = new UserModel(USERNAMEBASIC, PASSWORDENCODER);
+        userBasic = new UserModel(USERNAMEBASIC,EMAIL, PASSWORDENCODER);
         userBasic.setUserId(ID);
         userBasic.setRoles(Set.of(basicRole));
-        userBasic2 = new UserModel(USERNAMEBASIC, PASSWORDENCODER);
+        userBasic2 = new UserModel(USERNAMEBASIC,EMAIL, PASSWORDENCODER);
         userBasic2.setUserId(ID2);
         userBasic2.setRoles(Set.of(basicRole));
         tweet = new Tweet(IDTWEET,userBasic,CONTENT,CREATIONTIMESTAMP);

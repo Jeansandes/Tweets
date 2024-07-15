@@ -25,6 +25,7 @@ class UserServiceTest {
     private static final UUID ID = UUID.randomUUID();
     private static final String USERNAME = "admin";
     private static final String USERNAMEBASIC = "jean";
+    private static final String EMAIL = "sandesjean@gmail.com";
     private static final String PASSWORD = "123";
     private static final Role ROLEADMIN = new Role();
     private static final String PASSWORDENCODER = "passwordEncoder";
@@ -32,6 +33,8 @@ class UserServiceTest {
     private UserService userService;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private EmailServices emailServices;
     @Mock
     private RoleRepository roleRepository;
     @Mock
@@ -52,6 +55,7 @@ class UserServiceTest {
     @Test
     void whenSaveThenReturnCreated() {
         when(roleRepository.findByName(any())).thenReturn(adminRole);
+        doNothing().when(emailServices).sendTxtMail(any(),any(),any());
         when(userRepository.findByUsername(any())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(any())).thenReturn("passwordEncoder");
 
@@ -61,6 +65,7 @@ class UserServiceTest {
        verify(userRepository, times(1)).findByUsername(userDto.username());
        verify(userRepository,times(1)).save(argThat(userModel -> userModel.getPassword().equals(PASSWORDENCODER)));
        verify(userRepository,times(1)).save(argThat(userModel -> userModel.getRoles().contains(adminRole)));
+       verify(userRepository,times(1)).save(argThat(userModel -> userModel.getEmail().equals(EMAIL)));
 
 
     }
@@ -84,6 +89,7 @@ class UserServiceTest {
         assertEquals(2, response.size());
         assertEquals(USERNAME, response.get(0).getUsername());
         assertEquals(USERNAME, response.get(1).getUsername());
+        assertEquals(EMAIL, response.get(1).getEmail());
         assertEquals(PASSWORDENCODER, response.get(0).getPassword());
         assertEquals(PASSWORDENCODER, response.get(1).getPassword());
     }
@@ -92,13 +98,13 @@ class UserServiceTest {
     private void startContent() {
         basicRole.setName(Role.Values.BASIC.name());
         adminRole.setName(Role.Values.ADMIN.name());
-        userAdmin = new UserModel(USERNAME, PASSWORDENCODER);
+        userAdmin = new UserModel(USERNAME,EMAIL, PASSWORDENCODER);
         userAdmin.setUserId(ID);
         userAdmin.setRoles(Set.of(basicRole));
-        userBasic = new UserModel(USERNAME, PASSWORDENCODER);
+        userBasic = new UserModel(USERNAME,EMAIL, PASSWORDENCODER);
         userBasic.setUserId(ID);
         userBasic.setRoles(Set.of(basicRole));
-        userDto = new UserDto(USERNAME, PASSWORD);
+        userDto = new UserDto(USERNAME,EMAIL, PASSWORD);
         users = Arrays.asList(userAdmin,userBasic);
     }
 }

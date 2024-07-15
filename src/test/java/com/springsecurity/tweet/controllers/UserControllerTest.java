@@ -36,8 +36,8 @@ class UserControllerTest {
     }
 
     private void startContent() {
-       userDto = new UserDto("jean","123");
-       users = List.of(new UserModel("jean","123"));
+       userDto = new UserDto("jean","sandesjean@gmail.com","123");
+       users = List.of(new UserModel("jean","sandesjean@gmail.com","123"));
     }
     @Test
     void whenCreateUserThenReturnOk() {
