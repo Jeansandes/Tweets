@@ -55,6 +55,7 @@ public class TokenService {
                 .issuedAt(now)
                 .expiresAt(now.plusSeconds(expiresIn))
                 .claim("scope", scopes)
+                .claim("username", user.get().getUsername()) // Adicionar o nome de usuário às reivindicações
                 .build();
 
         var jwtValue = jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();

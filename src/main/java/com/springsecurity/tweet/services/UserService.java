@@ -8,12 +8,16 @@ import com.springsecurity.tweet.models.UserModel;
 import com.springsecurity.tweet.repositores.RoleRepository;
 import com.springsecurity.tweet.repositores.UserRepository;
 import jakarta.transaction.Transactional;
+import org.aspectj.weaver.ast.Var;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -57,15 +61,26 @@ public class UserService {
     }
 
     @Transactional
-    public void delete(String username) {
-        var user = userRepository.findByUsername(username);
-        if(user.isEmpty()){
-            throw new UserNotFoundException("User not found");
+    public boolean delete(String username, JwtAuthenticationToken token) {
+        var authenticatedUsername = userRepository.findById(UUID.fromString(token.getName()));
+        if (hasAdminAuthority() || username.equals(authenticatedUsername.get().getUsername())) {
+            var user = userRepository.findByUsername(username);
+            if(user.isEmpty()){
+                throw new UserNotFoundException("User not found");
+            }
+            userRepository.delete(user.get());
+            emailServices.sendTxtMail(user.get().getEmail()
+                    ,"Conta excluída!"
+                    ,"olá "+username+" sua conta no twitter foi excluida!");
+            return true;
+        } else {
+            return false;
         }
-        userRepository.delete(user.get());
-        emailServices.sendTxtMail(user.get().getEmail()
-        ,"Conta excluída!"
-        ,"olá "+username+" sua conta no twitter foi excluida!");
+    }
+    private boolean hasAdminAuthority() {
+        return SecurityContextHolder.getContext().getAuthentication().getAuthorities()
+                .stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("SCOPE_admin"));
     }
 }
 

@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,10 +38,14 @@ public class UserController {
     }
 
     @DeleteMapping("/username")
-    @PreAuthorize("hasAuthority('SCOPE_admin')")
-    public ResponseEntity<String> deleteUser(@RequestBody UserNameDto dto ){
-        userService.delete(dto.username());
-        return ResponseEntity.status(HttpStatus.OK).body("excluido com sucesso :"+dto.username());
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<String> deleteUser(@RequestBody UserNameDto dto, JwtAuthenticationToken token ){
+        var response =  userService.delete(dto.username(), token);
+        if(response) {
+            return ResponseEntity.status(HttpStatus.OK).body("excluido com sucesso :" + dto.username());
+        }else{
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("VOCE NÃO TEM PERMISSÃO PARA EXCLUIR");
+        }
     }
 }
 
