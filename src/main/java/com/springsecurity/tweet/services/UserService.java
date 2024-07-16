@@ -58,8 +58,14 @@ public class UserService {
 
     @Transactional
     public void delete(String username) {
-        var user = userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException("user: "+ username+" not found"));
-        userRepository.deleteByUsername(username);
+        var user = userRepository.findByUsername(username);
+        if(user.isEmpty()){
+            throw new UserNotFoundException("User not found");
+        }
+        userRepository.delete(user.get());
+        emailServices.sendTxtMail(user.get().getEmail()
+        ,"Conta excluída!"
+        ,"olá "+username+" sua conta no twitter foi excluida!");
     }
 }
 

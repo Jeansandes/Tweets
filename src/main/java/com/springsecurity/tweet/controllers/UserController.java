@@ -1,8 +1,11 @@
 package com.springsecurity.tweet.controllers;
 
 import com.springsecurity.tweet.dtos.UserDto;
+import com.springsecurity.tweet.dtos.UserNameDto;
 import com.springsecurity.tweet.models.UserModel;
 import com.springsecurity.tweet.services.UserService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -34,10 +37,10 @@ public class UserController {
     }
 
     @DeleteMapping("/username")
-    //@PreAuthorize("hasAuthority('SCOPE_admin')")
-    public ResponseEntity<Void> deleteUser(@RequestBody String username ){
-        userService.delete(username);
-        return ResponseEntity.ok().build();
+    @PreAuthorize("hasAuthority('SCOPE_admin')")
+    public ResponseEntity<String> deleteUser(@RequestBody UserNameDto dto ){
+        userService.delete(dto.username());
+        return ResponseEntity.status(HttpStatus.OK).body("excluido com sucesso :"+dto.username());
     }
 }
 
