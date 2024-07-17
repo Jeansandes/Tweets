@@ -62,12 +62,13 @@ public class UserService {
 
     @Transactional
     public boolean delete(String username, JwtAuthenticationToken token) {
+        var user = userRepository.findByUsername(username);
+        if(user.isEmpty()){
+            throw new UserNotFoundException("User not found");
+        }
         var authenticatedUsername = userRepository.findById(UUID.fromString(token.getName()));
         if (hasAdminAuthority() || username.equals(authenticatedUsername.get().getUsername())) {
-            var user = userRepository.findByUsername(username);
-            if(user.isEmpty()){
-                throw new UserNotFoundException("User not found");
-            }
+
             userRepository.delete(user.get());
             emailServices.sendTxtMail(user.get().getEmail()
                     ,"Conta excluída!"
@@ -77,7 +78,7 @@ public class UserService {
             return false;
         }
     }
-    private boolean hasAdminAuthority() {
+    public boolean hasAdminAuthority() {
         return SecurityContextHolder.getContext().getAuthentication().getAuthorities()
                 .stream()
                 .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("SCOPE_admin"));

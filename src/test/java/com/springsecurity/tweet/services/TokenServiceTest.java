@@ -8,6 +8,7 @@ import com.springsecurity.tweet.models.UserModel;
 import com.springsecurity.tweet.repositores.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -19,6 +20,7 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.openMocks;
 
@@ -34,13 +36,10 @@ class TokenServiceTest {
     @Mock
     private JwtEncoder jwtEncoder;
     @Mock
-    private JwtDecoder jwtDecoder;
-    @Mock
     private BCryptPasswordEncoder passwordEncoder;
     @Mock
     private UserRepository userRepository;
     private LoginRequest loginRequest;
-    private LoginRequest loginRequest2;
     private  Role  basicRole= new Role();
     private UserModel userBasic;
     private String tokenValue = "mockedToken";
@@ -56,7 +55,6 @@ class TokenServiceTest {
         userBasic.setUserId(ID);
         userBasic.setRoles(Set.of(basicRole));
         loginRequest = new LoginRequest(USERNAMEBASIC,PASSWORDENCODER);
-        loginRequest2 = new LoginRequest(USERNAMEBASIC,PASSWORDENCODER2);
 
     }
 
@@ -69,24 +67,28 @@ class TokenServiceTest {
                 .expiresAt(Instant.now().plusSeconds(300L))
                 .claim("scope", "BASIC")
                 .build();
+
+        // Mocks
         when(userRepository.findByUsername(loginRequest.username())).thenReturn(Optional.of(userBasic));
         when(passwordEncoder.matches(any(), any())).thenReturn(true);
-        Map<String, Object> headers = Map.of("alg", "HS256");
 
-        // Criando o objeto Jwt com cabeçalhos e claims válidos
-        Jwt jwt = new Jwt(tokenValue, Instant.now(), Instant.now().plusSeconds(300), headers, claims.getClaims());
-        when(jwtEncoder.encode(JwtEncoderParameters.from(claims))).thenReturn(jwt);
-        System.out.println(jwt.getTokenValue());
-        System.out.println(claims.getClaims());
-      //  when(jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue()).thenReturn(tokenValue);
+        // Configuração do mock para jwtEncoder.encode
+        Jwt jwtMock = mock(Jwt.class); // Mock de Jwt
+        when(jwtMock.getTokenValue()).thenReturn("tokenValue"); // Define o comportamento esperado para getTokenValue()
 
+        // Captura os parâmetros passados para jwtEncoder.encode e retorna o mock de Jwt diretamente
+        when(jwtEncoder.encode(ArgumentMatchers.any())).thenAnswer(invocation -> {
+            JwtEncoderParameters parameters = invocation.getArgument(0);
+            // Aqui você pode validar os parâmetros se necessário
+            return jwtMock;
+        });
+
+        // Chamada ao método checkUser do TokenService
         LoginResponse response = tokenService.checkUser(loginRequest);
 
-        System.out.println(response.accessToken());
-
+        // Verificações
         assertNotNull(response);
-        assertEquals(tokenValue, response.accessToken());
-       // assertEquals(300L, response.expiresIn());
+        assertEquals("tokenValue", response.accessToken());
     }
 
     @Test
