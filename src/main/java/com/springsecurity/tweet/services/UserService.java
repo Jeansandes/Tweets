@@ -6,10 +6,12 @@ import com.springsecurity.tweet.dtos.UserDto;
 import com.springsecurity.tweet.models.Role;
 import com.springsecurity.tweet.models.UserModel;
 import com.springsecurity.tweet.repositores.RoleRepository;
+import com.springsecurity.tweet.repositores.TweetRepository;
 import com.springsecurity.tweet.repositores.UserRepository;
 import jakarta.transaction.Transactional;
 import org.aspectj.weaver.ast.Var;
 import org.modelmapper.ModelMapper;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -25,34 +27,43 @@ public class UserService {
     private UserRepository userRepository;
     private RoleRepository roleRepository;
     private BCryptPasswordEncoder passwordEncoder;
-    private EmailServices emailServices;
+    private TweetRepository tweetRepository;
 
-    public UserService( UserRepository userRepository,RoleRepository roleRepository
-                        ,BCryptPasswordEncoder passwordEncoder,EmailServices emailServices) {
+    private KafkaTemplate<String, UserDto> kafkaTemplate;
+
+    public UserService(UserRepository userRepository, RoleRepository roleRepository
+                        , BCryptPasswordEncoder passwordEncoder
+            , TweetRepository tweetRepository,KafkaTemplate<String, UserDto> kafkaTemplate) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
-        this.emailServices = emailServices;
+        this.tweetRepository = tweetRepository;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     @Transactional
-    public void save(UserDto dto) {
+    public void save(UserDto userDto) {
+        int partition = 1;
         var basicRole = roleRepository.findByName(Role.Values.BASIC.name());
 
-        var userFromdb = userRepository.findByUsername(dto.username());
+        var userFromdb = userRepository.findByUsername(userDto.username());
         if(userFromdb.isPresent()){
             throw new UserAlreadyExistsException("usuário já existe!");
         }
         var user = new UserModel();
-        user.setUsername(dto.username());
-        user.setEmail(dto.email());
+        user.setUsername(userDto.username());
+        user.setEmail(userDto.email());
         user.setRoles(Set.of(basicRole));
-        user.setPassword(passwordEncoder.encode(dto.password()));
-        emailServices.sendTxtMail(dto.email()
-                , "Logado com sucesso no twitter!"
-                ,"parabéns "+user.getUsername()+" voce foi cadastrado com sucesso!");
+        user.setPassword(passwordEncoder.encode(userDto.password()));
         userRepository.save(user);
+        sendMessage(userDto,partition);
 
+    }
+
+    public void sendMessage(UserDto userDto,int partition) {
+        System.out.println("Sent message to partition: " + partition);
+        System.out.println("Sending Order: " + userDto.username());
+        this.kafkaTemplate.send("tweet_email_kafka",partition,null, userDto);
     }
 
     public List<UserModel> findAll() {
@@ -62,17 +73,18 @@ public class UserService {
 
     @Transactional
     public boolean delete(String username, JwtAuthenticationToken token) {
+        int partition = 2;
         var user = userRepository.findByUsername(username);
         if(user.isEmpty()){
             throw new UserNotFoundException("User not found");
         }
         var authenticatedUsername = userRepository.findById(UUID.fromString(token.getName()));
         if (hasAdminAuthority() || username.equals(authenticatedUsername.get().getUsername())) {
-
+            // Deletar todos os tweets do usuário
+            tweetRepository.deleteAllByUser_UserId(user.get().getUserId());
             userRepository.delete(user.get());
-            emailServices.sendTxtMail(user.get().getEmail()
-                    ,"Conta excluída!"
-                    ,"olá "+username+" sua conta no twitter foi excluida!");
+            UserDto dto = new UserDto(user.get().getUsername(),user.get().getEmail(),user.get().getPassword());
+            sendMessage(dto,partition);
             return true;
         } else {
             return false;

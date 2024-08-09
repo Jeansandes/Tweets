@@ -1,11 +1,13 @@
 package com.springsecurity.tweet.config;
 
+import com.springsecurity.tweet.dtos.UserDto;
 import com.springsecurity.tweet.models.Role;
 import com.springsecurity.tweet.models.UserModel;
 import com.springsecurity.tweet.repositores.RoleRepository;
 import com.springsecurity.tweet.repositores.UserRepository;
-import com.springsecurity.tweet.services.EmailServices;
+import com.springsecurity.tweet.services.UserService;
 import jakarta.transaction.Transactional;
+import org.modelmapper.ModelMapper;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -14,22 +16,24 @@ import java.util.Set;
 
 @Configuration
 public class AdminUserConfig implements CommandLineRunner {
+   // private ModelMapper mapper;
     private RoleRepository roleRepository;
     private UserRepository userRepository;
     private BCryptPasswordEncoder passwordEncoder;
+    private UserService userService;
 
-    private EmailServices emailServices;
 
-    public AdminUserConfig(UserRepository userRepository,RoleRepository roleRepository,BCryptPasswordEncoder passwordEncoder,EmailServices emailServices) {
+    public AdminUserConfig(UserRepository userRepository,RoleRepository roleRepository,BCryptPasswordEncoder passwordEncoder,UserService userService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
-        this.emailServices = emailServices;
+        this.userService = userService;
     }
 
     @Override
     @Transactional
     public void run(String... args) throws Exception {
+        int partition = 1;
         var role = roleRepository.findByName(Role.Values.ADMIN.name());
 
         var userAdmin = userRepository.findByUsername("admin");
@@ -46,9 +50,8 @@ public class AdminUserConfig implements CommandLineRunner {
                     user.setRoles(Set.of(role));
 
                     userRepository.save(user);
-                    emailServices.sendTxtMail(user.getEmail()
-                            , "Logado com sucesso no twitter!"
-                            ,"parabéns "+user.getUsername()+" voce foi cadastrado com sucesso!");
+                    UserDto dto =new UserDto(user.getUsername(),user.getEmail(),user.getPassword());
+                    userService.sendMessage(dto,partition);
                 }
         );
     }

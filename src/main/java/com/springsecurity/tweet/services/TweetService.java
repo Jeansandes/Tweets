@@ -9,6 +9,7 @@ import com.springsecurity.tweet.models.Role;
 import com.springsecurity.tweet.models.Tweet;
 import com.springsecurity.tweet.repositores.TweetRepository;
 import com.springsecurity.tweet.repositores.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -43,6 +44,7 @@ public class TweetService {
         tweetRepository.save(tweet);
     }
 
+    @Transactional
     public void delete(Long id, JwtAuthenticationToken token) throws ForbiddenException {
         var user = userRepository.findById(UUID.fromString(token.getName()));
 
@@ -53,6 +55,7 @@ public class TweetService {
                 .stream()
                 .anyMatch(role -> role.getName().equalsIgnoreCase(Role.Values.ADMIN.name()));
         if(isAdmin || tweet.getUser().getUserId().equals(UUID.fromString(token.getName()))){
+
             tweetRepository.deleteById(id);
         }
         else {

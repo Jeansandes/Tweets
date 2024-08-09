@@ -5,8 +5,24 @@ services:
       - "3307:3306"
     expose:
       - "3307"
+    networks:
+      - producer_net
     environment:
       - MYSQL_USER=admin
       - MYSQL_PASSWORD=123
       - MYSQL_DATABASE=mydb
       - MYSQL_ROOT_PASSWORD=123
+networks:
+  producer_net:
+    driver: bridge
+
+  #app:
+   # image: jeansandes/apiproducer:1.0
+    #depends_on:
+     #   - mysql
+   # environment:
+    #  SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3307/mydb
+     # SPRING_DATASOURCE_USERNAME: admin
+      #SPRING_DATASOURCE_PASSWORD: 123
+   # ports:
+    #  - "8081:8080"
