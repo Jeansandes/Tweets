@@ -5,12 +5,14 @@ import com.springsecurity.tweet.dtos.UserDto;
 import com.springsecurity.tweet.models.Role;
 import com.springsecurity.tweet.models.UserModel;
 import com.springsecurity.tweet.repositores.RoleRepository;
+import com.springsecurity.tweet.repositores.TweetRepository;
 import com.springsecurity.tweet.repositores.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -39,8 +41,6 @@ class UserServiceTest {
     @Mock
     private UserRepository userRepository;
     @Mock
-    private EmailServices emailServices;
-    @Mock
     private RoleRepository roleRepository;
     @Mock
     private BCryptPasswordEncoder passwordEncoder;
@@ -48,9 +48,12 @@ class UserServiceTest {
     private JwtAuthenticationToken token;
     @Mock
     private SecurityContext securityContext;
-
+    @Mock
+    private TweetRepository tweetRepository;
     @Mock
     private Authentication authentication;
+    @Mock
+    private KafkaTemplate<String, UserDto> kafkaTemplate;
 
     private UserModel userAdmin;
     private UserModel userBasic;
@@ -66,9 +69,16 @@ class UserServiceTest {
     }
 
     @Test
+    void whenSendMessageThenReturnMessage(){
+        Integer partition = 1;
+        userService.sendMessage(userDto, partition);
+
+        verify(kafkaTemplate).send(eq("tweet_email_kafka"), eq(partition), eq(null), eq(userDto));
+    }
+
+    @Test
     void whenSaveThenReturnCreated() {
         when(roleRepository.findByName(any())).thenReturn(adminRole);
-        doNothing().when(emailServices).sendTxtMail(any(),any(),any());
         when(userRepository.findByUsername(any())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(any())).thenReturn("passwordEncoder");
 
@@ -117,9 +127,8 @@ class UserServiceTest {
         when(userRepository.findByUsername(any())).thenReturn(Optional.of(userAdmin));
         when(token.getName()).thenReturn(ID.toString());
         when(userRepository.findById(any())).thenReturn(Optional.of(userAdmin));
+        doNothing().when(tweetRepository).deleteAllByUser_UserId(any());
         doNothing().when(userRepository).delete(userAdmin);
-        doNothing().when(emailServices).sendTxtMail(any(),any(),any());
-
         var response = userService.delete(userAdmin.getUsername(),token);
 
         assertEquals(true, response);
